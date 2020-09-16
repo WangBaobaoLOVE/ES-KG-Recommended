@@ -26,12 +26,33 @@ Elasticsearch
 这里暂时就不赘述了，主要用的都是主流系统、软件和开源软件。后期有空在详细写下安装配置过程。
 
 1. ubuntu18.04：这个系统镜像如果从官网下载的话，速度真心还不慢。可以点击[here](http://jxz2dz.natappfree.cc/static/files/ubuntu-18.04.4-desktop-amd64.iso)帮我测试下是否能从我自己搭建的网站下载。至于系统安装就不详细介绍了，百度一下啥都有，主要区别在于不同品牌的电脑进入BISO的操作略微有些不同。
-2. Elasticsearch：这是开源软件，有自己的官网。人家的教程比我的详细，只要安装成功就可以了。
-3. kibana：同Elasticsearch。
-4. Pycharm：ubuntu的应用商店就有，点击安装就可以了。
-5. Anaconda：这个网上教程很多，
+2. Elasticsearch：这是开源软件，有自己的官网。人家的教程比我的详细，只要安装成功就可以了。点击在[here](http://jxz2dz.natappfree.cc/static/files/)下载。
+3. kibana：同Elasticsearch。点击在[here](http://jxz2dz.natappfree.cc/static/files/kibana-7.8.0-amd64.deb)下载。
+4. Pycharm：ubuntu的应用商店就有，点击安装就可以了。点击在[here](http://jxz2dz.natappfree.cc/static/files/pycharm-community-2020.1.2.tar.gz)下载。
+5. Anaconda：这个网上教程很多，点击在[here](http://jxz2dz.natappfree.cc/static/files/Anaconda3-2020.02-Linux-x86_64.sh)下载。
 6. jupyter notebook: 这个安装了Anaconda也就有了。
 
 ## First：认识数据
 
-这里主要是熟悉，了解，探索一下简历数据是怎样，各字段都代表什么含义，如何着手进行研究等等。
+这里主要是熟悉，了解，探索一下简历数据是怎样，各字段都代表什么含义，如何着手进行研究等等。参考[exploreData.ipynb](./dataset/exploreData.ipynb)
+
+### 一个简历样本数据
+
+![简历结构](./images/structure.png)
+
+具体的简历数据样本和样本数据中各字段含义可到[exploreData.ipynb](./dataset/exploreData.ipynb)查看。可以看出一份简历主要有4部分构成：
+
+1. id： 表示了简历的所属人；
+2. 教育经历：主要包括受教育时间，受教育高校，学习专业；
+3. 工作经历：工作过的公司，时间，规模，职位等；
+4. 项目经历：参与的项目，负责内容，时间等。
+
+### 外引数据——schoolRange.xlsx
+
+在该数据表中主要存储了中国高校排名，参考[2019-2020中国大学排名800强完整榜单（校友会最新版）](https://www.dxsbb.com/news/5463.html)，内部的缺失数据已经人工补齐。主要用于在为搜索到的简历排序时，为教育经历提供参考依据。
+
+## 
+
+
+
+
