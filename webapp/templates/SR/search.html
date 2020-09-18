@@ -10,10 +10,11 @@
         {% csrf_token %}
         <div class="col-lg-6">
             <div class="input-group">
-                <input type="text" class="form-control" placeholder="Search for...">
+                <input type="text" class="form-control" placeholder="Search for..." name="text">
                 <span class="input-group-btn">
         <button class="btn btn-default" type="submit">Search</button>
       </span>
+                <span>{{ status }}</span>
             </div><!-- /input-group -->
         </div><!-- /.col-lg-6 -->
     </form>
