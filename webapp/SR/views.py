@@ -3,6 +3,7 @@ from django.http import HttpResponse
 
 # jieba -> import
 import jieba
+import re
 
 
 ######################
@@ -13,10 +14,38 @@ def splitWords(text):
     words_splited = jieba.cut_for_search(text)
     words_string = ','.join(words_splited)
     words_list = words_string.split(',')
+    print(words_list)
     return words_list
 
-def wordsClassifiter(words_list):
+def wordsClassifiter(text):
+    edu_dic = ['专业', '大学', '高校', '毕业', '深造', '本科', '硕士', '博士', '学生', '研究生', '学院', '学']
+    work_dic = ['工作', '就业']
+    project_dic = ['项目']
+    dics = [edu_dic, work_dic, project_dic]
+    symbol = '，|。|：|；|？|“|”|！|、|‘|’'
+
+    text = re.split(symbol, text)
+    text.reverse()
+    print(text)
+
+    before = -1
     edu_work_project = [[],[],[]]
+    for words in text:
+        if words:
+            for dic_num in range(len(dics)):
+                status = 0
+                for word in dics[dic_num]:
+                    if word in words:
+                        edu_work_project[dic_num].append(words)
+                        before = dic_num
+                        status = 1
+                        break
+
+                if status:
+                    break
+            if status == 0 and before >= 0:
+                edu_work_project[before].append(words)
+
     return edu_work_project
 
 def select():
@@ -29,13 +58,11 @@ def sort():
 
 def search(request):
     if request.method == 'POST':
-        print('this is post')
         text = request.POST.get('text')
         if not text:
-            print('empty')
             return render(request, 'SR/search.html',{'status': '输入为空，请重新输入'})
 
-        words = wordsClassifiter(splitWords(text))
+        words = wordsClassifiter(text)
 
         effect = 0
         for word in words:
