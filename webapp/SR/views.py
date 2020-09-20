@@ -48,6 +48,19 @@ def wordsClassifiter(text):
 
     return edu_work_project
 
+def wordClassifiter(words):
+    edu_work_project_words = [[], [], []]
+    for words_num in range(len(edu_work_project_words)):
+        print(words_num)
+        for word in words[words_num]:
+            if not word:
+                break
+            print(word)
+            edu_work_project_words[words_num] += splitWords(word)
+
+    print(edu_work_project_words)
+    return edu_work_project_words
+
 def select():
     pass
 
@@ -62,7 +75,9 @@ def search(request):
         if not text:
             return render(request, 'SR/search.html',{'status': '输入为空，请重新输入'})
 
+        # 分句
         words = wordsClassifiter(text)
+        print(words)
 
         effect = 0
         for word in words:
@@ -71,6 +86,18 @@ def search(request):
                 break
         if not effect:
             return render(request, 'SR/search.html',{'status': '输入无效，请输入有效的语句'})
+
+        # 分词
+        word = wordClassifiter(words)
+
+        effect = 0
+        for word_ in word:
+            if word_:
+                effect = 1
+                break
+        if not effect:
+            return render(request, 'SR/search.html',{'status': '输入无效，请输入有效的语句'})
+
 
         return redirect('results')
     return render(request, 'SR/search.html')

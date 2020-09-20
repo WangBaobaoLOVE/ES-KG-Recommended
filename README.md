@@ -59,9 +59,45 @@ Elasticsearch
 
 在该搜索栏中输入自己对简历的要求。
 
-### 关键词提取
+## 分句——工作，项目，教育
 
-从语句中提取关键字，并将其投入到相应类目的箱子里（教育，工作，项目）。
+基于中文的表述特性，利用标点符号进行句子划分。并投入到教育、工作和项目三个类别下。
+
+```
+def wordsClassifiter(text):
+    edu_dic = ['专业', '大学', '高校', '毕业', '深造', '本科', '硕士', '博士', '学生', '研究生', '学院', '学']
+    work_dic = ['工作', '就业']
+    project_dic = ['项目']
+    dics = [edu_dic, work_dic, project_dic]
+    symbol = '，|。|：|；|？|“|”|！|、|‘|’'
+
+    text = re.split(symbol, text)
+    text.reverse()
+    print(text)
+
+    before = -1
+    edu_work_project = [[],[],[]]
+    for words in text:
+        if words:
+            for dic_num in range(len(dics)):
+                status = 0
+                for word in dics[dic_num]:
+                    if word in words:
+                        edu_work_project[dic_num].append(words)
+                        before = dic_num
+                        status = 1
+                        break
+
+                if status:
+                    break
+            if status == 0 and before >= 0:
+                edu_work_project[before].append(words)
+
+    return edu_work_project
+```
+### 分词——工作，项目，教育
+
+从相应类目的箱子里（教育，工作，项目）的语句中提取关键字，并在相应类目的文档中检索。
 
 **[jieba分词](URL)：**
 
@@ -75,12 +111,33 @@ Elasticsearch
 
      # 输出：'小明,硕士,毕业,于,中国,科学,学院,科学院,中国科学院,计算,计算所,，,后,在,日本,京都,大学,日本京都大学,深造'
 
+3. 分词
 
-### 关键词分类——工作，项目，教育
+```
+def wordClassifiter(words):
+    edu_work_project_words = [[], [], []]
+    for words_num in range(len(edu_work_project_words)):
+        print(words_num)
+        for word in words[words_num]:
+            if not word:
+                break
+            print(word)
+            edu_work_project_words[words_num] += splitWords(word)
 
-### 搜索
+    print(edu_work_project_words)
+    return edu_work_project_words
 
-搜索所有符合条件的简历。
+def splitWords(text):
+    words_splited = jieba.cut_for_search(text)
+    words_string = ','.join(words_splited)
+    words_list = words_string.split(',')
+    print(words_list)
+    return words_list
+```
+
+### 搜索————工作，项目，教育（交集）
+
+搜索所有符合条件的简历，是工作，项目，教育三者的交集。
 
 ## Third：排序方法构建
 
