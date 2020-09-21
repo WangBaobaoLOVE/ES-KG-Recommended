@@ -67,6 +67,8 @@ def edu_select(word):
     edu_ids = []
 
     for each_word in word:
+        if len(each_word) <= 1:
+            continue
         results_edu = es.search(
             index='eke_education',
             body={
@@ -91,6 +93,8 @@ def work_select(word):
     work_ids = []
 
     for each_word in word:
+        if '工作' in each_word or len(each_word)<=1:
+            continue
         results_work = es.search(
             index='eke_work',
             body={
@@ -115,6 +119,8 @@ def project_select(word):
     project_ids = []
 
     for each_word in word:
+        if '项目' in each_word or len(each_word)<=1:
+            continue
         results_project = es.search(
             index='eke_project',
             body={
@@ -136,7 +142,7 @@ def project_select(word):
     return list(set(project_ids))
 
 def acount_select(word):
-    acount_ids_all = [[], [], []]
+    acount_ids_all = []
     filed_names = ['education', 'work', 'project']
     for each_filed in range(len(filed_names)):
         for each_word in word[each_filed]:
@@ -149,13 +155,15 @@ def acount_select(word):
                         }
                     }
                 },
-                filter_path=["hits.hits._id"]
+                filter_path=["h.hits._id"]
             )
             for result_acount in results_acount['hits']['hits']:
-                acount_ids_all[each_filed].append(result_acount['_id'])
-        acount_ids_all[each_filed] = list(set(acount_ids_all[each_filed]))
+                acount_ids_all.append(result_acount['_id'])
+
     print(acount_ids_all)
-    return acount_ids_all
+    acount_ids = dict(Counter(acount_ids_all))
+    print(acount_ids)
+    return acount_ids
 
 def select(word):
     edu_work_project_ids = [[], [], []]
@@ -207,7 +215,8 @@ def search(request):
             return render(request, 'SR/search.html',{'status': '输入无效，请输入有效的语句'})
 
         # select
-        select(word)
+        acount_ids_nums = select(word)
+        print(acount_ids_nums)
 
         return redirect('results')
     return render(request, 'SR/search.html')
