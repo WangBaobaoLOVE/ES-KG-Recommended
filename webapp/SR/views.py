@@ -4,6 +4,7 @@ from django.http import HttpResponse
 # jieba -> import
 import jieba
 import re
+from collections import Counter   #引入Counter
 from elasticsearch import Elasticsearch
 es = Elasticsearch(['localhost:9200'])
 
@@ -63,52 +64,98 @@ def wordClassifiter(words):
     return edu_work_project_words
 
 def edu_select(word):
-    results_edu = es.search(
-        index='eke_education',
-        body={
-            "query": {"match":{
-                "id": "5AD212977DC44"
-            }}
-        }
-    )
-    print(results_edu)
-    return results_edu
+    edu_ids = []
+
+    for each_word in word:
+        results_edu = es.search(
+            index='eke_education',
+            body={
+                "query": {
+                    "multi_match":{
+                        "query": each_word,
+                        "fields":["school_name","discipline_name"]
+                    }
+                    # 还需要添加一个学历本科，硕士和博士的筛选
+                }
+            },
+            filter_path=["hits.hits._id"]
+        )
+
+
+        for result_edu in results_edu['hits']['hits']:
+            edu_ids.append(result_edu['_id'])
+    print(list(set(edu_ids)))
+    return list(set(edu_ids))
 
 def work_select(word):
-    results_work = es.search(
-        index='eke_work',
-        body={
-            "query": {"match":{
-                "id": "5AD212977DC44"
-            }}
-        }
-    )
+    work_ids = []
 
-    return results_work
+    for each_word in word:
+        results_work = es.search(
+            index='eke_work',
+            body={
+                "query": {
+                    "multi_match":{
+                        "query": each_word,
+                        "fields":["responsibilities","achievement","corporation_name","industry_name","architecture_name","position_name"]
+                    }
+                    # 还需要添加years的筛选
+                }
+            },
+            filter_path=["hits.hits._id"]
+        )
+
+
+        for result_work in results_work['hits']['hits']:
+            work_ids.append(result_work['_id'])
+    print(list(set(work_ids)))
+    return list(set(work_ids))
 
 def project_select(word):
-    results_project = es.search(
-        index='eke_project',
-        body={
-            "query": {"match":{
-                "id": "5AD212977DC44"
-            }}
-        }
-    )
+    project_ids = []
 
-    return results_project
+    for each_word in word:
+        results_project = es.search(
+            index='eke_project',
+            body={
+                "query": {
+                    "multi_match":{
+                        "query": each_word,
+                        "fields":["name","describe","responsibilities"]
+                    }
+                    # 还需要添加years的筛选
+                }
+            },
+            filter_path=["hits.hits._id"]
+        )
+
+
+        for result_project in results_project['hits']['hits']:
+            project_ids.append(result_project['_id'])
+    print(list(set(project_ids)))
+    return list(set(project_ids))
 
 def acount_select(word):
-    results_acount = es.search(
-        index='eke_acount',
-        body = {
-            "query": {"match":{
-                "id": "5AD212977DC44"
-            }}
-        }
-    )
-
-    return results_acount
+    acount_ids_all = [[], [], []]
+    filed_names = ['education', 'work', 'project']
+    for each_filed in range(len(filed_names)):
+        for each_word in word[each_filed]:
+            results_acount = es.search(
+                index='eke_acount',
+                body = {
+                    "query": {
+                        "match":{
+                            filed_names[each_filed]: each_word
+                        }
+                    }
+                },
+                filter_path=["hits.hits._id"]
+            )
+            for result_acount in results_acount['hits']['hits']:
+                acount_ids_all[each_filed].append(result_acount['_id'])
+        acount_ids_all[each_filed] = list(set(acount_ids_all[each_filed]))
+    print(acount_ids_all)
+    return acount_ids_all
 
 def select(word):
     edu_work_project_ids = [[], [], []]
@@ -116,6 +163,7 @@ def select(word):
     edu_work_project_ids[0] += edu_select(word[0])
     edu_work_project_ids[1] += work_select(word[1])
     edu_work_project_ids[2] += project_select(word[2])
+    print(edu_work_project_ids)
 
     acount_ids = acount_select(edu_work_project_ids)
 
