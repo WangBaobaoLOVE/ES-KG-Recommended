@@ -4,7 +4,8 @@ from django.http import HttpResponse
 # jieba -> import
 import jieba
 import re
-
+from elasticsearch import Elasticsearch
+es = Elasticsearch(['localhost:9200'])
 
 ######################
 # the functions defined by myself
@@ -61,13 +62,72 @@ def wordClassifiter(words):
     print(edu_work_project_words)
     return edu_work_project_words
 
-def select():
-    pass
+def edu_select(word):
+    results_edu = es.search(
+        index='eke_education',
+        body={
+            "query": {"match":{
+                "id": "5AD212977DC44"
+            }}
+        }
+    )
+    print(results_edu)
+    return results_edu
+
+def work_select(word):
+    results_work = es.search(
+        index='eke_work',
+        body={
+            "query": {"match":{
+                "id": "5AD212977DC44"
+            }}
+        }
+    )
+
+    return results_work
+
+def project_select(word):
+    results_project = es.search(
+        index='eke_project',
+        body={
+            "query": {"match":{
+                "id": "5AD212977DC44"
+            }}
+        }
+    )
+
+    return results_project
+
+def acount_select(word):
+    results_acount = es.search(
+        index='eke_acount',
+        body = {
+            "query": {"match":{
+                "id": "5AD212977DC44"
+            }}
+        }
+    )
+
+    return results_acount
+
+def select(word):
+    edu_work_project_ids = [[], [], []]
+
+    edu_work_project_ids[0] += edu_select(word[0])
+    edu_work_project_ids[1] += work_select(word[1])
+    edu_work_project_ids[2] += project_select(word[2])
+
+    acount_ids = acount_select(edu_work_project_ids)
+
+    return acount_ids
 
 def sort():
     pass
 
+##########################
 # Create your views here.
+#
+###########################
 
 def search(request):
     if request.method == 'POST':
@@ -98,6 +158,8 @@ def search(request):
         if not effect:
             return render(request, 'SR/search.html',{'status': '输入无效，请输入有效的语句'})
 
+        # select
+        select(word)
 
         return redirect('results')
     return render(request, 'SR/search.html')
