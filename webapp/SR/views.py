@@ -20,7 +20,7 @@ def splitWords(text):
     return words_list
 
 def wordsClassifiter(text):
-    edu_dic = ['专业', '大学', '高校', '毕业', '深造', '本科', '硕士', '博士', '学生', '研究生', '学院', '学']
+    edu_dic = ['专业', '大学', '高校', '毕业', '深造', '本科', '硕士', '博士', '学生', '研究生', '学院', '学', '大']
     work_dic = ['工作', '就业']
     project_dic = ['项目']
     dics = [edu_dic, work_dic, project_dic]
@@ -65,36 +65,35 @@ def wordClassifiter(words):
 
 def edu_select(word):
     edu_ids = []
-
+    filed_names = ["school_name","discipline_name"]
     for each_word in word:
-        if len(each_word) <= 1:
+        if len(each_word)<2:
             continue
-        results_edu = es.search(
-            index='eke_education',
-            body={
-                "query": {
-                    "multi_match":{
-                        "query": each_word,
-                        "fields":["school_name","discipline_name"]
-                    }
-                    # 还需要添加一个学历本科，硕士和博士的筛选
-                }
-            },
-            filter_path=["hits.hits._id"]
-        )
+        for filed_name in filed_names:
+            if len(each_word) < 4 and filed_name == "school_name":
+                continue
+            results_edu = es.search(
+                index='eke_education',
+                body={
+                    "query": {
+                        "match":{
+                            filed_name: each_word,
+                        }
+                        # 还需要添加一个学历本科，硕士和博士的筛选
+                    },
+                    "size": 100
+                },
+                filter_path=["hits.hits._id"]
+            )
 
-
-        for result_edu in results_edu['hits']['hits']:
-            edu_ids.append(result_edu['_id'])
-    print(list(set(edu_ids)))
+            for result_edu in results_edu['hits']['hits']:
+                edu_ids.append(result_edu['_id'])
     return list(set(edu_ids))
 
 def work_select(word):
     work_ids = []
 
     for each_word in word:
-        if '工作' in each_word or len(each_word)<=1:
-            continue
         results_work = es.search(
             index='eke_work',
             body={
@@ -112,15 +111,13 @@ def work_select(word):
 
         for result_work in results_work['hits']['hits']:
             work_ids.append(result_work['_id'])
-    print(list(set(work_ids)))
+
     return list(set(work_ids))
 
 def project_select(word):
     project_ids = []
 
     for each_word in word:
-        if '项目' in each_word or len(each_word)<=1:
-            continue
         results_project = es.search(
             index='eke_project',
             body={
@@ -138,7 +135,7 @@ def project_select(word):
 
         for result_project in results_project['hits']['hits']:
             project_ids.append(result_project['_id'])
-    print(list(set(project_ids)))
+
     return list(set(project_ids))
 
 def acount_select(word):
@@ -155,14 +152,12 @@ def acount_select(word):
                         }
                     }
                 },
-                filter_path=["h.hits._id"]
+                filter_path=["hits.hits._id"]
             )
             for result_acount in results_acount['hits']['hits']:
                 acount_ids_all.append(result_acount['_id'])
 
-    print(acount_ids_all)
     acount_ids = dict(Counter(acount_ids_all))
-    print(acount_ids)
     return acount_ids
 
 def select(word):
@@ -171,7 +166,6 @@ def select(word):
     edu_work_project_ids[0] += edu_select(word[0])
     edu_work_project_ids[1] += work_select(word[1])
     edu_work_project_ids[2] += project_select(word[2])
-    print(edu_work_project_ids)
 
     acount_ids = acount_select(edu_work_project_ids)
 
@@ -217,6 +211,9 @@ def search(request):
         # select
         acount_ids_nums = select(word)
         print(acount_ids_nums)
+
+        # sort
+
 
         return redirect('results')
     return render(request, 'SR/search.html')
