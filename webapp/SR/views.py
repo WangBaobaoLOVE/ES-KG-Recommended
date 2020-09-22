@@ -64,6 +64,9 @@ def wordClassifiter(words):
     return edu_work_project_words
 
 def edu_select(word):
+    if not word:
+        return []
+
     edu_ids = []
     filed_names = ["school_name","discipline_name"]
     for each_word in word:
@@ -93,6 +96,9 @@ def edu_select(word):
 def work_select(word):
     work_ids = []
 
+    if not word:
+        return []
+
     for each_word in word:
         results_work = es.search(
             index='eke_work',
@@ -116,6 +122,9 @@ def work_select(word):
 
 def project_select(word):
     project_ids = []
+
+    if not word:
+        return []
 
     for each_word in word:
         results_project = es.search(
@@ -157,8 +166,8 @@ def acount_select(word):
             for result_acount in results_acount['hits']['hits']:
                 acount_ids_all.append(result_acount['_id'])
 
-    acount_ids = dict(Counter(acount_ids_all))
-    return acount_ids
+    # acount_ids = dict(Counter(acount_ids_all))
+    return acount_ids_all
 
 def select(word):
     edu_work_project_ids = [[], [], []]
@@ -171,8 +180,34 @@ def select(word):
 
     return acount_ids
 
-def sort():
-    pass
+def score_edu(acount_id):
+    return 0
+
+def score_work(acount_id):
+    return 0
+
+def score_project(acount_id):
+    return 0
+
+def score(acount_id):
+    a = 0.4
+    b = 0.3
+    c = 0.3
+    E = score_edu(acount_id)
+    W = score_work(acount_id)
+    P = score_project(acount_id)
+    Score = a * E + b * W + c * P
+    return Score
+
+def sort(acount_selected):
+    acount_sorted = {}
+    print('this is sort!')
+
+    for each_acount in acount_selected:
+        acount_sorted[each_acount] = score(each_acount)
+
+    print(acount_sorted)
+    return acount_sorted
 
 ##########################
 # Create your views here.
@@ -209,11 +244,11 @@ def search(request):
             return render(request, 'SR/search.html',{'status': '输入无效，请输入有效的语句'})
 
         # select
-        acount_ids_nums = select(word)
-        print(acount_ids_nums)
+        acount_ids = select(word)
+        print(acount_ids)
 
         # sort
-
+        acount_sorted = sort(acount_ids)
 
         return redirect('results')
     return render(request, 'SR/search.html')
