@@ -423,8 +423,8 @@ def search(request):
     return render(request, 'SR/search.html')
 
 def results(request):
-    global_acount_sorted[0]
-    return render(request, 'SR/results.html')
+    print(global_acount_sorted[0])
+    return render(request, 'SR/results.html', {'acount_sorted': global_acount_sorted[0]})
 
 def profile(request):
     return render(request, 'SR/profile.html')

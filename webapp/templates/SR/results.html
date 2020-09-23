@@ -16,12 +16,15 @@
     </thead>
 
     <tbody>
+    {% for acount_id, acount_score in acount_sorted %}
     <tr>
-        <td>1</td>
-        <td>1</td>
-        <td>1</td>
-        <td><a href="profile">查看</a></td>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ acount_id }}</td>
+        <td>{{ acount_score }}</td>
+        <td><a href="profile?acount_id={{ acount_id }}">查看</a></td>
     </tr>
+    {% endfor %}
+
     </tbody>
 </table>
 </body>
