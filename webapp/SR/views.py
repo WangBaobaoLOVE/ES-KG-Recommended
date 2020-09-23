@@ -180,22 +180,39 @@ def select(word):
 
     return acount_ids
 
-def score_edu(acount_id):
+def score_edu(edu_ids):
     return 0
 
-def score_work(acount_id):
+def score_work(work_ids):
     return 0
 
-def score_project(acount_id):
+def score_project(project_ids):
     return 0
 
 def score(acount_id):
     a = 0.4
     b = 0.3
     c = 0.3
-    E = score_edu(acount_id)
-    W = score_work(acount_id)
-    P = score_project(acount_id)
+    print(acount_id)
+    acount = es.search(
+                index='eke_acount',
+                body = {
+                    "query": {
+                        "match": {
+                            "_id": acount_id
+                        }
+                    }
+                },
+                filter_path=["hits.hits._source"]
+            )
+    acount = acount['hits']['hits'][0]['_source']
+    edu_ids = acount["education"]
+    work_ids = acount["work"]
+    project_ids = acount["project"]
+
+    E = score_edu(edu_ids)
+    W = score_work(work_ids)
+    P = score_project(project_ids)
     Score = a * E + b * W + c * P
     return Score
 
