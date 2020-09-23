@@ -3,6 +3,7 @@ from django.http import HttpResponse
 
 # jieba -> import
 import jieba
+import numpy as np
 import re
 from collections import Counter   #引入Counter
 from elasticsearch import Elasticsearch
@@ -263,18 +264,51 @@ def score_work(work_ids):
     # print(scale_list)
     c = max(scale_list)
     if c < 10:
-        c = 10
-    # print(c)
+        c = 10   # print(c)
     # print(y_end)
     # print(y_start)
-    y = int(y_end) - int(y_start) if int(y_end) > int(y_start) else int(y_start) - int(y_end)
+    if not y_end or not y_start:
+        y = 1
+    else:
+        y = int(y_end) - int(y_start) if int(y_end) > int(y_start) else int(y_start) - int(y_end)
     y_ = y/len(work_ids)
     W = 10*math.log10(y+1)*y_*(math.log10(c))*(math.log10(c))/16
     print('c={};y={};y_={};W={}'.format(c,y,y_,W))
     return W
 
+def cosine_similarity(sentence1: str, sentence2: str) -> float:
+    """
+    # https://blog.csdn.net/weixin_40400177/article/details/89409619
+    compute normalized COSINE similarity.
+    :param sentence1: English sentence.
+    :param sentence2: English sentence.
+    :return: normalized similarity of two input sentences.
+    """
+    seg1 = ','.join(jieba.cut_for_search(sentence1))
+    seg2 = ','.join(jieba.cut_for_search(sentence2))
+
+    word_list = list(set([word for word in seg1 + seg2]))
+    word_count_vec_1 = []
+    word_count_vec_2 = []
+    for word in word_list:
+        word_count_vec_1.append(seg1.count(word))
+        word_count_vec_2.append(seg2.count(word))
+
+    vec_1 = np.array(word_count_vec_1)
+    vec_2 = np.array(word_count_vec_2)
+
+    num = vec_1.dot(vec_2.T)
+    denom = np.linalg.norm(vec_1) * np.linalg.norm(vec_2)
+    if denom == 0:
+        return 0.80
+    cos = num / denom
+    # print('num = {}; denom = {}.'.format(num, denom))
+    sim = 0.5 + 0.5 * cos
+
+    return sim
+
 def score_project(project_ids):
-    P = 0
+    n_sum = []
     for project_id in project_ids:
         project = es.search(
                 index='eke_project',
@@ -288,8 +322,18 @@ def score_project(project_ids):
                 filter_path= ["hits.hits._source"]
             )
         project = project['hits']['hits'][0]['_source']
-        # print(project)
-    return 0
+
+        # print(project['describe'])
+        # print(project['responsibilities'])
+        sim = cosine_similarity(project['describe'], project['responsibilities'])
+        n_sum.append(sim)
+        # print(n_sum)
+
+    n = len(project_ids) if len(project_ids) <= 9 else 9
+    n_ = 10*sum(n_sum)/len(n_sum)
+    P = 10*math.log10(n+1)*n_
+    print('n = {}; n_ = {}; P = {}.'.format(n, n_, P))
+    return P
 
 def score(acount_id):
     a = 0.4
@@ -317,6 +361,7 @@ def score(acount_id):
     W = score_work(work_ids)
     P = score_project(project_ids)
     Score = a * E + b * W + c * P
+    print('Score = {}'.format(Score))
     return Score
 
 def sort(acount_selected):
