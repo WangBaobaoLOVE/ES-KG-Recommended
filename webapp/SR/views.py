@@ -7,6 +7,9 @@ import re
 from collections import Counter   #引入Counter
 from elasticsearch import Elasticsearch
 es = Elasticsearch(['localhost:9200'])
+import pandas as pd
+schoolRange = pd.read_excel('static/files/schoolRange.xlsx')
+import math
 
 ######################
 # the functions defined by myself
@@ -181,19 +184,118 @@ def select(word):
     return acount_ids
 
 def score_edu(edu_ids):
-    return 0
+    for edu_index in [0, -1]:
+        edu_search = es.search(
+                index='eke_education',
+                body = {
+                    "query": {
+                        "match": {
+                            "_id": edu_ids[edu_index]
+                        }
+                    }
+                },
+                filter_path=["hits.hits._source"]
+            )
+        if edu_index == 0:
+            edu = edu_search['hits']['hits'][0]['_source']['school_name']
+        else:
+            d = edu_search['hits']['hits'][0]['_source']['sort_id']
+            if d > 3:
+                d = 3
+    print(edu)
+    # print(d)
+
+    edu_range = schoolRange[schoolRange['学校名称'] == edu]
+    if not edu_range.shape[0]:
+        s = 60
+        m = 1
+    else:
+        s = edu_range['综合得分'].iloc[0]
+        m = edu_range['星级排名'].iloc[0]
+
+    E = (d * d) * (s / 10) * m / 9
+    print('d = {}; m = {}; s = {}; E = {}.'.format(d,m,s,E))
+    return E
 
 def score_work(work_ids):
-    return 0
+    scale_list = []
+    for work_index in range(len(work_ids)):
+        work = es.search(
+                index='eke_work',
+                body = {
+                    "query": {
+                        "match": {
+                            "_id": work_ids[work_index]
+                        }
+                    }
+                },
+                filter_path=["hits.hits._source"]
+            )
+        work = work['hits']['hits'][0]['_source']
+        # print(work)
+
+        symbol = '，|。|：|；|？|“|”|！|、|‘|’|-|人'
+        # print(re.split(symbol, work['scale']))
+        if not work['scale']:
+            scale_list.append(10)
+        else:
+            for each_scale in re.split(symbol, work['scale']):
+                try:
+                    if isinstance(int(each_scale), int):
+                        scale_list.append(int(each_scale))
+                except:
+                    pass
+                # print(each_scale)
+
+        if work_index == 0:
+            if not work['end_time']:
+                y_end = work['start_time'].split('年')[0]
+            else:
+                y_end = work['end_time'].split('年')[0]
+            # print(y_end)
+
+            if len(work_ids) == 1:
+                y_start = work['start_time'].split('年')[0]
+        elif work_index == len(work_ids)-1:
+            y_start = work['start_time'].split('年')[0]
+
+    # print('this is work')
+    # print(scale_list)
+    c = max(scale_list)
+    if c < 10:
+        c = 10
+    # print(c)
+    # print(y_end)
+    # print(y_start)
+    y = int(y_end) - int(y_start) if int(y_end) > int(y_start) else int(y_start) - int(y_end)
+    y_ = y/len(work_ids)
+    W = 10*math.log10(y+1)*y_*(math.log10(c))*(math.log10(c))/16
+    print('c={};y={};y_={};W={}'.format(c,y,y_,W))
+    return W
 
 def score_project(project_ids):
+    P = 0
+    for project_id in project_ids:
+        project = es.search(
+                index='eke_project',
+                body = {
+                    "query": {
+                        "match": {
+                            "_id": project_id
+                        }
+                    }
+                },
+                filter_path= ["hits.hits._source"]
+            )
+        project = project['hits']['hits'][0]['_source']
+        # print(project)
     return 0
 
 def score(acount_id):
     a = 0.4
     b = 0.3
     c = 0.3
-    print(acount_id)
+    # print(acount_id)
     acount = es.search(
                 index='eke_acount',
                 body = {
@@ -206,6 +308,7 @@ def score(acount_id):
                 filter_path=["hits.hits._source"]
             )
     acount = acount['hits']['hits'][0]['_source']
+
     edu_ids = acount["education"]
     work_ids = acount["work"]
     project_ids = acount["project"]
@@ -239,7 +342,7 @@ def search(request):
 
         # 分句
         words = wordsClassifiter(text)
-        print(words)
+        # print(words)
 
         effect = 0
         for word in words:
@@ -262,7 +365,7 @@ def search(request):
 
         # select
         acount_ids = select(word)
-        print(acount_ids)
+        # print(acount_ids)
 
         # sort
         acount_sorted = sort(acount_ids)
