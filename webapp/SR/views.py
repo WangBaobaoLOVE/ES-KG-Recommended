@@ -427,4 +427,37 @@ def results(request):
     return render(request, 'SR/results.html', {'acount_sorted': global_acount_sorted[0]})
 
 def profile(request):
-    return render(request, 'SR/profile.html')
+    acount_id = request.GET.get('acount_id')
+    # acount_id = "29860084"
+    results_acount = es.search(
+        index='eke_acount',
+        body = {
+            "query": {
+                "match":{
+                    '_id': acount_id
+                }
+            }
+        },
+        filter_path=["hits.hits._source"]
+    )
+    results_acount = results_acount['hits']['hits'][0]['_source']
+    # print(results_acount)
+
+    edu_work_pro = {'education':[], 'work':[], 'project':[]}
+    filed_names = ['education', 'work', 'project']
+    for filed_name in filed_names:
+        for each_id in results_acount[filed_name]:
+            result_ = es.search(
+                index='eke_{}'.format(filed_name),
+                body={
+                    "query": {
+                        "match": {
+                            'id': each_id
+                        }
+                    }
+                },
+                filter_path=["hits.hits._source"]
+            )
+            edu_work_pro[filed_name].append(result_['hits']['hits'][0]['_source'])
+    # print(edu_work_pro)
+    return render(request, 'SR/profile.html', {'acount_id': acount_id, 'edu':edu_work_pro['education'], 'work': edu_work_pro['work'], 'project': edu_work_pro['project']})

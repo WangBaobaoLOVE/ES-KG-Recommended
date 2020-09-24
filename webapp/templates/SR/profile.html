@@ -15,7 +15,7 @@
 
     <div class="detailed-div">
         <ul class="detailed-ul">
-            <li>id：xxx</li>
+            <li>id：{{ acount_id }}</li>
             <li>年龄：xxx岁/li>
             <li>籍贯：xxx</li>
             <li>电话：198xxxxxxxxx</li>
@@ -33,28 +33,30 @@
         <div class="img-education-div">
             <span class="text-education-span">教育背景</span>
         </div>
-        <span class="education-time-span">2014.09-2018.07</span>
+        {% for each_edu in edu %}
+        <span class="education-time-span">{{ each_edu.start_time }}-{{ each_edu.end_time. }}</span>
+        <br/>
+        <span class="education-school-span"> {{ each_edu.school_name }}           {{ each_edu.discipline_name }}</span>
         <br/>
         <br/>
-        <span class="education-school-span"> XXXXX大学        本科        XXX专业</span>
+        {% endfor %}
     </div>
     <hr/>
     <div class="skll-div">
         <div class="img_circle-skill-div">
-            <span class="text-education-span">职业技能</span>
+            <span class="text-education-span">工作经历</span>
             <div class="img_line-skil-div"></div>
         </div>
         <div class="skill-list-div">
-            <ol>
-                <li><p><b>熟练掌握JAVA语言,具备扎实的JAVA面向对象编程基础,有良好的编码习惯;</b></p></li>
-                <li><p><b>熟练掌握Html,了解JavaScript、CSS;</b></p></li>
-                <li><p><b>熟练掌握Oracle、了解MySQL、SQLServer等常用数据库的使用;</b></p></li>
-                <li><p><b>熟练使用Eclipse,Android Studio等开发工具;</p></li>
-                <li><p><b>熟悉Java Api、良好的文档阅读理解能力;</b></p></li>
-                <li><p><b>了解数据结构;</b></p></li>
-                <li><p><b>了解C++语言,会基本的C++编程;</b></p></li>
-                <li><p><b>了解HTML、JSON及XML及其解析。</b></p></li>
-            </ol>
+            {% for each_work in work %}
+            <b>工作{{ forloop.counter }}：{{ each_work.corporation_name }}</b>
+            <div class="div-experience">
+                <p><strong>时间：</strong>{{ each_work.start_time }} - {{ h_work.end_time }}</p>
+                <p><strong>职位:</strong>{{ each_work.architecture_name }} - {{ each_work.position_name }}</p>
+                <p><strong>工作内容:</strong>{{ each_work.responsibilities }}</p>
+            </div>
+            <br/>
+            {% endfor %}
         </div>
     </div>
     <hr>
@@ -63,23 +65,16 @@
             <span class="text-experience-span">项目经验</span>
         </div>
         <div class="img_line-experience-div"></div>
+        {% for each_project in project %}
         <div class="experience1-div">
-            <b>项目一：大数计算器</b>
-            <div class="div-p">
-                <p>独立设计实现;</p>
-                <p>运用Swing实现界面设计;</p>
-                <p>使用多线程、数据库实现机票管理操作。</p>
-            </div>
+            <b>项目{{ forloop.counter }}：{{ each_project.name }}</b>
+            <p><strong>时间：</strong>{{ each_project.start_time }} - {{ each_project.end_time }}</p>
+            <p><strong>职位:</strong>{{ each_project.position_name }}</p>
+            <p><strong>负责内容:</strong>{{ each_project.responsibilities }}</p>
         </div>
         <br/>
-        <div class="experience2-div">
-            <b>项目二:Android平台天气预报客户端</b>
-            <div class="div-p">
-                <p>独立设计实现</p>
-                <p>运用技术:</p>
-                <p>网络通信 json数据解析 自定义视图 本地数据存储</p>
-            </div>
-        </div>
+        {% endfor %}
+
     </div>
 </main>
 </body>
