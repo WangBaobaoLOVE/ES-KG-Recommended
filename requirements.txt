@@ -50,7 +50,7 @@ demjson==2.2.4
 diff-match-patch==20181111
 dill==0.3.2
 distributed==2.11.0
-Django==3.1
+Django==3.1.6
 dm-tree==0.1.5
 docplex==2.15.194
 docutils==0.16
